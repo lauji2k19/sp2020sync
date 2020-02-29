@@ -14,12 +14,14 @@ from google.auth.transport.requests import Request
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SHEET_ID = "1W6nyokTCIyZyuXbHV-zY_VHs0qT4zC2EHUAMUBJwa90"
+CREDS_PATH = "credentials/credentials.json"
+SHEET_TOKEN_PATH = "credentials/sheettoken.pickle"
 
 class SyncToSheets:
     def __init__(self):
         creds = None
-        if os.path.exists('sheettoken.pickle'):
-            with open('sheettoken.pickle', 'rb') as token:
+        if os.path.exists(SHEET_TOKEN_PATH):
+            with open(SHEET_TOKEN_PATH, 'rb') as token:
                 creds = pickle.load(token)
 
         if not creds or not creds.valid:
@@ -27,9 +29,9 @@ class SyncToSheets:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials/credentials.json', SCOPES)
+                    CREDS_PATH, SCOPES)
                 creds = flow.run_local_server(port=0)
-            with open('credentials/sheettoken.pickle', 'wb') as token:
+            with open(SHEET_TOKEN_PATH, 'wb') as token:
                 pickle.dump(creds, token)
 
         service = build('sheets', 'v4', credentials=creds)
@@ -62,6 +64,9 @@ class SyncToSheets:
         response = self.sheet.values().update(spreadsheetId=SHEET_ID, range="A2:P", valueInputOption="USER_ENTERED", body=body).execute()
         return f"SUCCESS: {response}"
 
-sync = SyncToSheets()
-response = sync.push_match_data(sys.argv[1])
-print(response)
+if len(sys.argv) != 2:
+    print("Invalid syntax. The script should be run like: python sync.py COMPCODE")
+else:
+    sync = SyncToSheets()
+    response = sync.push_match_data(sys.argv[1])
+    print(response)
