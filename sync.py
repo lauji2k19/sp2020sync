@@ -57,7 +57,6 @@ class SyncToSheets:
             file_path = path+file
             if os.path.isfile(file_path) and file.split("_")[0] == comp_code:
                 f = open(file_path)
-                print(file_path)
                 competition_json["matches"].append(json.loads(f.read()))
         competition_json["matches"].sort(key=lambda f: f["matchNumber"])
         f = open(f"{path}{comp_code}.json", "w")
